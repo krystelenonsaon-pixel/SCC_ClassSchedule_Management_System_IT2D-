@@ -114,6 +114,35 @@ public class UserDao {
         }
     }
 
+    /**
+     * Updates a user's role and status with a parameterized statement.
+     * Inputs are upper-cased first; TEACHER is stored as INSTRUCTOR to match the schema.
+     */
+    public boolean updateUserRoleAndStatus(int userId, String newRole, String newStatus) {
+        if (newRole == null || newStatus == null) {
+            System.out.println("Role and status are required.");
+            return false;
+        }
+
+        String role = newRole.trim().toUpperCase();
+        if (role.equals("TEACHER")) {
+            role = "INSTRUCTOR";
+        }
+        String status = newStatus.trim().toUpperCase();
+
+        String sql = "UPDATE users SET role = ?, status = ? WHERE id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, role);
+            statement.setString(2, status);
+            statement.setInt(3, userId);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException e) {
+            System.out.println("Could not update account: " + e.getMessage());
+            return false;
+        }
+    }
+
     public void logActivity(Integer userId, String action, String description) {
         String sql = """
             INSERT INTO activity_logs (user_id, action, description, event_timestamp)
